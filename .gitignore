@@ -1,0 +1,7 @@
+# Ignore raw database storage binaries and runtime state
+data/
+*.log
+*.tmp
+
+# Ignore local environment overrides if necessary
+.env
