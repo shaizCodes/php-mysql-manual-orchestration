@@ -120,8 +120,14 @@ The database layer operates as a manually controlled daemon instead of a persist
   mysqld --initialize-insecure --console
   ```
 
-> [!TIP]
-> `--initialize-insecure` is intended for local development environments. It creates the internal system schema without generating a root password, simplifying initial local access.
+> [!WARNING]
+>
+> ### Production Security & Compliance Notice
+>
+> The implementation of `--initialize-insecure` and the use of blank/default credentials (`root` with no password) are strictly reserved for **isolated, local development simulations**.
+>
+> - **Credential Exposure:** Hardcoding or documenting default authentication configurations in shared repositories represents a severe security vulnerability.
+> - **Production Safeguards:** In staging or production provisioning, secrets must be dynamically injected via secure environment variables or vault systems, and the daemon must be bootstrapped using `mysqld --initialize` to generate unique, cryptographically secure administrative credentials.
 
 ### Phase 3 - Runtime Execution & Validation
 
@@ -145,7 +151,9 @@ The database layer operates as a manually controlled daemon instead of a persist
 - [ ] Create project-specific schemas:
 
   ```cmd
-  CREATE DATABASE hostel_database;
+  CREATE DATABASE temporary_database;
+  CREATE DATABASE another_temporary_database;
+  USE temporary_database;
   ```
 
   You can connect explicitly using `-u` (MySQL username), `-h` (host address) and `-P` (MySQL server port) respectively.
@@ -154,7 +162,13 @@ The database layer operates as a manually controlled daemon instead of a persist
   mysql -u root -h 127.0.0.1 -P 3306
   ```
 
-- Validate successful communication between PHP and MySQL using a simple mysqli connection test targeting: `127.0.0.1:3306`
+- Validate successful communication between PHP and MySQL using a [simple mysqli connection test](./sample-connection.php).
+
+> [!IMPORTANT]
+>
+> #### Connectivity Lifecycle & Diagnostics
+>
+> For a step-by-step technical walkthrough of common failure states—including missing extensions, dormant daemons, and authentication mismatches—refer to the [DIAGNOSTICS.md](./DIAGNOSTICS.md) guide.
 
 ## MySQL  Client Utilities & Backup Management
 
@@ -234,7 +248,7 @@ The `mysqldump` utility is a logical backup tool used to export database schemas
 #### Export a Single Database
 
 ```cmd
-mysqldump -u root hostel_database > hostel_database.sql
+mysqldump -u root temporary_database > temporary_database.sql
 ```
 
 This generates a SQL dump file containing:
@@ -247,7 +261,7 @@ This generates a SQL dump file containing:
 #### Export Multiple Databases
 
 ```cmd
-mysqldump -u root --databases hostel_database another_database > databases_backup.sql
+mysqldump -u root --databases temporary_database another_temporary_database > databases_backup.sql
 ```
 
 #### Export All Databases
@@ -259,7 +273,7 @@ mysqldump -u root --all-databases > full_backup.sql
 #### Restore a Database From Backup
 
 ```cmd
-mysql -u root hostel_database < hostel_database.sql
+mysql -u root temporary_database < temporary_database.sql
 ```
 
 This replays the SQL dump into the target database.
